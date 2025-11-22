@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Voicebot Demo (Offline, No API)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif; padding:20px; max-width:700px; margin:auto; line-height:1.5;}
+    button{padding:12px 18px; margin-right:8px; font-size:16px; cursor:pointer;}
+    .box{border:1px solid #ddd; padding:12px; border-radius:6px; margin-top:12px;}
+    h1{margin-bottom:8px;}
+  </style>
+</head>
+<body>
+  <h1>Voicebot Demo</h1>
+  <p>Press <b>Start</b>, ask a question, and hear the bot respond.  
+  This demo uses pre-written responses (no API key needed).</p>
+
+  <button id="start">🎤 Start</button>
+  <button id="stop">🛑 Stop</button>
+
+  <div class="box"><strong>You said:</strong><div id="trans"></div></div>
+  <div class="box"><strong>Bot says:</strong><div id="bot"></div></div>
+
+<script>
+const canned = {
+  "life story": "I'm someone who loves solving problems and making things easier for people. My path has always been shaped by curiosity, continuous learning, and taking on challenges that push me forward.",
+  "superpower": "My number one superpower is clarity — I can take complex ideas and simplify them into clear, practical steps.",
+  "grow": "Three areas I want to grow in are leadership, deeper applied AI engineering, and building stronger product intuition.",
+  "misconception": "A common misconception is that I prefer to work alone because I’m quiet while focusing. In reality, I enjoy collaboration — I just switch into deep-focus mode when solving problems.",
+  "push": "I push my boundaries by setting stretch goals, experimenting quickly, seeking feedback early, and intentionally choosing work that challenges me."
+};
+
+const startBtn = document.getElementById("start"), 
+      stopBtn = document.getElementById("stop");
+const transDiv = document.getElementById("trans"), 
+      botDiv = document.getElementById("bot");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec;
+
+if (SpeechRecognition) {
+  rec = new SpeechRecognition();
+  rec.lang = "en-US";
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = (event) => {
+    const text = event.results[0][0].transcript.toLowerCase();
+    transDiv.textContent = text;
+    reply(text);
+  };
+
+  rec.onend = () => startBtn.disabled = false;
+
+} else {
+  alert("Your browser does not support voice input. Please use Google Chrome.");
+}
+
+startBtn.onclick = () => { startBtn.disabled = true; rec.start(); };
+stopBtn.onclick = () => { rec.stop(); startBtn.disabled = false; };
+
+function reply(userText) {
+  let response = "I don't have a prepared answer for that — try asking one of the sample questions above.";
+
+  Object.keys(canned).forEach(key => {
+    if (userText.includes(key)) response = canned[key];
+  });
+
+  botDiv.textContent = response;
+
+  const utter = new SpeechSynthesisUtterance(response);
+  utter.lang = "en-US";
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+}
+</script>
+</body>
+</html>
